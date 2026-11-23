@@ -1,41 +1,32 @@
+
 pipeline {
-  agent any
+    agent any
 
-  stages {
-      stage('Build') {
-      agent {
-        docker { image 'django:latest' }
-      }
-      steps {
-            // Run the Django server in the foreground
-            sh 'python3 manage.py check' 
-            echo 'Django server started. Proceeding to next stage...'
-      }
-    }
+    stages {
+        stage('Code Checkout') {
+            steps {
+                script {
+                    git branch: 'develop',
+                        url: 'https://github.com/ArshamShahzad8/django-todo-cicd.git'
 
-    stage('Deploy') {
-      steps {
-        // Build the image
-        sh 'docker build -t todo .'
-        
-        // Run the container with a specific name (e.g., 'todo_container')
-        sh 'docker run -d -p 8000:8000 --name todo_container todo'
-      }
-      post {
-        always {
-          echo 'Waiting for 2 minutes before stopping and deleting containers...'
-          // Sleep for 2 minutes before stopping and deleting containers
-          sleep 120
+                    echo "Repository Name: django-todo-cicd"
+                    echo "Remote Repository URL: https://github.com/ArshamShahzad8/django-todo-cicd.git"
 
-          // Stop the container using its name
-          echo 'Stopping container...'
-          sh 'docker stop todo_container'
+                    sh '''
+                        echo "Current Git Branch:"
+                        git branch --show-current
 
-          // Remove the container
-          echo 'Removing container...'
-          sh 'docker rm todo_container'
+                        echo "Workspace Files and Directories:"
+                        ls -la
+                    '''
+                }
+            }
         }
-      }
+
+        stage('Build') {
+            steps {
+                sh 'docker build -t todo .'
+            }
+        }
     }
-  }
 }
